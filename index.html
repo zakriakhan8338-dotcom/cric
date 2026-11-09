@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GULLY LEGENDS — 3D Animated Cricket</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        pitchgreen: '#092813',
+                        stadiumgreen: '#0B3D1B',
+                        grasslight: '#145A27',
+                        goldaccent: '#FFC72C',
+                        goldhover: '#E5B220',
+                        cricketred: '#D93838',
+                        charcoal: '#121915',
+                        surfacedark: '#1A241E',
+                        titanium: '#A3B899'
+                    },
+                    fontFamily: {
+                        heading: ['Space Grotesk', 'sans-serif'],
+                        body: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts & FontAwesome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Three.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #092813;
+            color: #FFFFFF;
+            user-select: none;
+            touch-action: manipulation;
+            overflow-x: hidden;
+        }
+        h1, h2, h3, h4, .font-heading {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #092813; }
+        ::-webkit-scrollbar-thumb { background: #145A27; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #FFC72C; }
+
+        .glass-panel {
+            background: rgba(26, 36, 30, 0.88);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 199, 44, 0.2);
+        }
+        .glow-gold {
+            box-shadow: 0 0 25px rgba(255, 199, 44, 0.25);
+        }
+        .text-glow-gold {
+            text-shadow: 0 0 15px rgba(255, 199, 44, 0.4);
+        }
+        .btn-pulse {
+            animation: pulseGlow 2.5s infinite ease-in-out;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(255, 199, 44, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(255, 199, 44, 0.6); }
+        }
+    </style>
+</head>
+<body class="bg-pitchgreen text-white min-h-screen flex flex-col justify-between selection:bg-goldaccent selection:text-charcoal">
+
+    <!-- Audio Control Floating Bar -->
+    <div class="fixed top-4 right-4 z-50 flex items-center space-x-2">
+        <button id="sound-btn" onclick="toggleAudio()" class="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-goldaccent hover:text-white transition-colors border border-goldaccent/30 shadow-lg">
+            <i id="sound-icon" class="fa-solid fa-volume-high text-sm"></i>
+        </button>
+    </div>
+
+    <!-- Persistent Header -->
+    <header class="w-full bg-charcoal/90 border-b border-goldaccent/20 px-4 py-3 sticky top-0 z-40 backdrop-blur-md">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="showScreen('menu')">
+                <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-goldaccent to-yellow-600 flex items-center justify-center text-charcoal font-heading font-extrabold text-xl italic shadow">
+                    GL
+                </div>
+                <div>
+                    <h1 class="font-heading font-extrabold text-lg tracking-wider text-white leading-none">GULLY LEGENDS 3D</h1>
+                    <span class="text-[10px] text-goldaccent font-semibold tracking-widest uppercase">Animated Premier Street Cricket</span>
+                </div>
+            </div>
+
+            <!-- Player Status Badge -->
+            <div class="flex items-center space-x-4 text-xs font-semibold">
+                <div class="bg-surfacedark/90 px-3 py-1.5 rounded-full border border-goldaccent/20 flex items-center space-x-2">
+                    <i class="fa-solid fa-coins text-goldaccent"></i>
+                    <span id="header-coins" class="text-white font-heading font-bold">1,250</span>
+                </div>
+                <div class="hidden sm:flex bg-surfacedark/90 px-3 py-1.5 rounded-full border border-white/10 items-center space-x-2">
+                    <i class="fa-solid fa-trophy text-yellow-500"></i>
+                    <span id="header-level" class="text-titanium">LVL 4</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN APP SCREENS -->
+    <main class="flex-grow flex items-center justify-center p-3 sm:p-6 relative z-10">
+
+        <!-- ================= 1. MAIN MENU ================= -->
+        <section id="screen-menu" class="w-full max-w-4xl space-y-8 py-4">
+            <!-- Hero Banner -->
+            <div class="relative rounded-3xl overflow-hidden glass-panel p-8 sm:p-12 text-center border border-goldaccent/30 glow-gold">
+                <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-grasslight/40 via-pitchgreen to-charcoal/90 -z-10"></div>
+                
+                <span class="inline-block bg-goldaccent/10 border border-goldaccent/40 text-goldaccent text-xs font-heading font-bold uppercase tracking-widest px-4 py-1 rounded-full mb-4">
+                    Season 3 • 3D Fielders & Dynamic Physics Live
+                </span>
+
+                <h1 class="font-heading text-4xl sm:text-6xl font-extrabold text-white uppercase tracking-tight leading-none mb-4">
+                    BECOME THE <span class="text-transparent bg-clip-text bg-gradient-to-r from-goldaccent via-yellow-200 to-goldaccent text-glow-gold">GULLY KING</span>
+                </h1>
+                <p class="text-titanium text-sm sm:text-base max-w-xl mx-auto mb-8 font-medium">
+                    Experience fully animated 3D cartoon bowlers, batsmen, active chasing fielders, timing-based batting, and high-stakes street cricket.
+                </p>
+
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <button onclick="startMatchSetup('quick')" class="w-full sm:w-auto bg-gradient-to-r from-goldaccent to-yellow-500 hover:from-goldhover hover:to-yellow-600 text-charcoal px-8 py-4 rounded-xl font-heading font-extrabold text-base uppercase tracking-wider transition-all transform hover:scale-105 btn-pulse flex items-center justify-center space-x-3 shadow-xl">
+                        <i class="fa-solid fa-play text-lg"></i>
+                        <span>Play 2-Over Match</span>
+                    </button>
+                    <button onclick="startMatchSetup('superover')" class="w-full sm:w-auto bg-cricketred hover:bg-red-600 text-white px-6 py-4 rounded-xl font-heading font-extrabold text-base uppercase tracking-wider transition-all transform hover:scale-105 flex items-center justify-center space-x-3 shadow-lg">
+                        <i class="fa-solid fa-bolt text-lg"></i>
+                        <span>Super Over</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sub Menu Grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <button onclick="startPracticeMode()" class="glass-panel p-5 rounded-2xl border border-white/10 hover:border-goldaccent/50 transition-all text-center group">
+                    <div class="w-12 h-12 rounded-xl bg-grasslight/50 text-goldaccent mx-auto flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-bullseye"></i>
+                    </div>
+                    <h3 class="font-heading font-bold text-sm uppercase">Practice Net</h3>
+                    <p class="text-[11px] text-titanium mt-1">Master timing</p>
+                </button>
+
+                <button onclick="showScreen('teams')" class="glass-panel p-5 rounded-2xl border border-white/10 hover:border-goldaccent/50 transition-all text-center group">
+                    <div class="w-12 h-12 rounded-xl bg-grasslight/50 text-goldaccent mx-auto flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <h3 class="font-heading font-bold text-sm uppercase">Select Team</h3>
+                    <p class="text-[11px] text-titanium mt-1" id="active-team-name">Green Warriors</p>
+                </button>
+
+                <button onclick="showScreen('shop')" class="glass-panel p-5 rounded-2xl border border-white/10 hover:border-goldaccent/50 transition-all text-center group">
+                    <div class="w-12 h-12 rounded-xl bg-grasslight/50 text-goldaccent mx-auto flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-store"></i>
+                    </div>
+                    <h3 class="font-heading font-bold text-sm uppercase">Locker & Shop</h3>
+                    <p class="text-[11px] text-titanium mt-1">Bats & Kits</p>
+                </button>
+
+                <button onclick="showScreen('leaderboard')" class="glass-panel p-5 rounded-2xl border border-white/10 hover:border-goldaccent/50 transition-all text-center group">
+                    <div class="w-12 h-12 rounded-xl bg-grasslight/50 text-goldaccent mx-auto flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-award"></i>
+                    </div>
+                    <h3 class="font-heading font-bold text-sm uppercase">Stats & Rewards</h3>
+                    <p class="text-[11px] text-titanium mt-1">Achievements</p>
+                </button>
+            </div>
+        </section>
+
+        <!-- ================= 2. TEAM SELECTION ================= -->
+        <section id="screen-teams" class="w-full max-w-4xl space-y-6 hidden">
+            <div class="flex items-center justify-between">
+                <div>
+                    <span class="text-xs text-goldaccent font-heading font-bold uppercase tracking-wider block">Franchise Hub</span>
+                    <h2 class="font-heading text-3xl font-bold uppercase">Choose Squad</h2>
+                </div>
+                <button onclick="showScreen('menu')" class="bg-surfacedark hover:bg-grasslight text-white px-4 py-2 rounded-lg text-xs font-heading uppercase tracking-wider border border-white/10">
+                    <i class="fa-solid fa-arrow-left mr-2"></i>Back to Menu
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6" id="teams-container">
+                <!-- Team cards populated by JS -->
+            </div>
+        </section>
+
+        <!-- ================= 3. SHOP / LOCKER ================= -->
+        <section id="screen-shop" class="w-full max-w-4xl space-y-6 hidden">
+            <div class="flex items-center justify-between">
+                <div>
+                    <span class="text-xs text-goldaccent font-heading font-bold uppercase tracking-wider block">Equipment Customizer</span>
+                    <h2 class="font-heading text-3xl font-bold uppercase">Pro Locker & Shop</h2>
+                </div>
+                <button onclick="showScreen('menu')" class="bg-surfacedark hover:bg-grasslight text-white px-4 py-2 rounded-lg text-xs font-heading uppercase tracking-wider border border-white/10">
+                    <i class="fa-solid fa-arrow-left mr-2"></i>Back to Menu
+                </button>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex space-x-3 border-b border-white/10 pb-3">
+                <button onclick="switchShopTab('bats')" id="tab-bats" class="shop-tab-btn bg-goldaccent text-charcoal px-5 py-2 rounded-lg font-heading font-bold text-xs uppercase">Bats</button>
+                <button onclick="switchShopTab('jerseys')" id="tab-jerseys" class="shop-tab-btn bg-surfacedark text-titanium px-5 py-2 rounded-lg font-heading font-bold text-xs uppercase">Team Kits</button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6" id="shop-items-container">
+                <!-- Populated by JS -->
+            </div>
+        </section>
+
+        <!-- ================= 4. LEADERBOARD & REWARDS ================= -->
+        <section id="screen-leaderboard" class="w-full max-w-3xl space-y-6 hidden">
+            <div class="flex items-center justify-between">
+                <div>
+                    <span class="text-xs text-goldaccent font-heading font-bold uppercase tracking-wider block">Hall of Fame</span>
+                    <h2 class="font-heading text-3xl font-bold uppercase">Leaderboard & Achievements</h2>
+                </div>
+                <button onclick="showScreen('menu')" class="bg-surfacedark hover:bg-grasslight text-white px-4 py-2 rounded-lg text-xs font-heading uppercase tracking-wider border border-white/10">
+                    <i class="fa-solid fa-arrow-left mr-2"></i>Back to Menu
+                </button>
+            </div>
+
+            <!-- Stats Card -->
+            <div class="grid grid-cols-3 gap-4">
+                <div class="glass-panel p-4 rounded-xl text-center border border-white/10">
+                    <span class="text-[10px] text-titanium uppercase block">Total Runs</span>
+                    <span id="stats-total-runs" class="font-heading font-bold text-2xl text-goldaccent">0</span>
+                </div>
+                <div class="glass-panel p-4 rounded-xl text-center border border-white/10">
+                    <span class="text-[10px] text-titanium uppercase block">Sixes Hit</span>
+                    <span id="stats-total-sixes" class="font-heading font-bold text-2xl text-white">0</span>
+                </div>
+                <div class="glass-panel p-4 rounded-xl text-center border border-white/10">
+                    <span class="text-[10px] text-titanium uppercase block">Matches Won</span>
+                    <span id="stats-wins" class="font-heading font-bold text-2xl text-green-400">0</span>
+                </div>
+            </div>
+
+            <!-- Achievements List -->
+            <div class="glass-panel p-6 rounded-2xl border border-white/10 space-y-4">
+                <h3 class="font-heading text-lg font-bold uppercase text-goldaccent">Personal Achievements</h3>
+                <div class="space-y-3" id="achievements-container">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= 5. ACTIVE GAMEPLAY CANVAS SCREEN ================= -->
+        <section id="screen-game" class="w-full max-w-5xl flex flex-col items-center hidden relative">
+            <!-- HUD Top Bar -->
+            <div class="w-full glass-panel rounded-2xl p-4 mb-3 border border-goldaccent/30 flex flex-wrap items-center justify-between gap-4">
+                <!-- Score & Overs -->
+                <div class="flex items-center space-x-4">
+                    <div class="bg-pitchgreen/90 px-4 py-2 rounded-xl border border-goldaccent/40 text-center">
+                        <span class="text-[10px] text-titanium uppercase font-bold block">Score</span>
+                        <div class="font-heading font-extrabold text-2xl text-goldaccent">
+                            <span id="hud-score">0/0</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-titanium uppercase font-bold">Overs: <span id="hud-overs" class="text-white font-extrabold">0.0 / 2.0</span></div>
+                        <div class="text-xs text-titanium uppercase font-bold mt-0.5">Target: <span id="hud-target" class="text-goldaccent font-extrabold">--</span></div>
+                    </div>
+                </div>
+
+                <!-- Recent Balls Commentary Badges -->
+                <div class="flex items-center space-x-1.5 overflow-x-auto py-1" id="hud-recent-balls">
+                    <!-- Badges injected by JS -->
+                </div>
+
+                <!-- Timing & Speed Feedback -->
+                <div class="text-right">
+                    <div id="hud-bowler-info" class="text-xs text-titanium font-semibold">Fast Bowler • 138 km/h</div>
+                    <div id="hud-shot-feedback" class="font-heading font-extrabold text-sm text-goldaccent uppercase tracking-wider animate-bounce">
+                        READY TO PLAY
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main 3D Canvas Stage Container -->
+            <div class="relative w-full aspect-[16/10] max-h-[580px] bg-pitchgreen rounded-2xl overflow-hidden border-2 border-goldaccent/30 shadow-2xl flex items-center justify-center">
+                <!-- ThreeJS Canvas -->
+                <canvas id="cricket-canvas" class="w-full h-full block cursor-pointer"></canvas>
+
+                <!-- On-Screen Touch Controls (Mobile Friendly Overlay) -->
+                <div id="mobile-controls" class="absolute bottom-4 left-4 right-4 flex items-center justify-between pointer-events-none">
+                    <!-- Direction D-Pad -->
+                    <div class="pointer-events-auto grid grid-cols-3 gap-1 w-32 h-32 bg-charcoal/80 p-2 rounded-2xl backdrop-blur border border-white/20">
+                        <div></div>
+                        <button onclick="setShotDirection('UP')" class="bg-grasslight hover:bg-goldaccent hover:text-charcoal text-white rounded font-bold text-xs flex items-center justify-center">▲</button>
+                        <div></div>
+                        <button onclick="setShotDirection('LEFT')" class="bg-grasslight hover:bg-goldaccent hover:text-charcoal text-white rounded font-bold text-xs flex items-center justify-center">◄</button>
+                        <button onclick="setShotDirection('DOWN')" class="bg-grasslight hover:bg-goldaccent hover:text-charcoal text-white rounded font-bold text-xs flex items-center justify-center">▼</button>
+                        <button onclick="setShotDirection('RIGHT')" class="bg-grasslight hover:bg-goldaccent hover:text-charcoal text-white rounded font-bold text-xs flex items-center justify-center">►</button>
+                    </div>
+
+                    <!-- Swing Action Button -->
+                    <div class="pointer-events-auto">
+                        <button id="mobile-hit-btn" onclick="triggerBatSwing()" class="w-24 h-24 rounded-full bg-gradient-to-tr from-goldaccent to-yellow-500 hover:scale-105 active:scale-95 text-charcoal font-heading font-extrabold text-base uppercase tracking-wider shadow-2xl flex flex-col items-center justify-center border-4 border-white/30 btn-pulse">
+                            <i class="fa-solid fa-baseball text-xl mb-1"></i>
+                            <span>HIT!</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Keyboard Instructions Bar -->
+                <div class="hidden sm:flex absolute top-3 left-3 bg-charcoal/80 backdrop-blur px-3 py-1.5 rounded-lg border border-white/10 text-[11px] text-titanium space-x-3">
+                    <span><strong class="text-white">SPACE:</strong> Swing Bat</span>
+                    <span><strong class="text-white">ARROWS:</strong> Shot Direction</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Match Result Modal -->
+    <div id="modal-result" class="fixed inset-0 z-50 hidden bg-pitchgreen/95 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="glass-panel p-8 rounded-3xl max-w-md w-full border border-goldaccent/40 text-center space-y-6 glow-gold">
+            <div id="result-badge" class="w-20 h-20 rounded-full bg-goldaccent/20 text-goldaccent mx-auto flex items-center justify-center text-4xl border border-goldaccent">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            
+            <div>
+                <h2 id="result-title" class="font-heading font-extrabold text-3xl uppercase tracking-tight text-white mb-1">VICTORY!</h2>
+                <p id="result-subtitle" class="text-titanium text-sm font-medium">You won by 14 runs!</p>
+            </div>
+
+            <!-- Match Summary Card -->
+            <div class="bg-surfacedark/90 p-4 rounded-2xl border border-white/10 space-y-2 text-xs">
+                <div class="flex justify-between text-titanium"><span>Your Score:</span><strong id="result-user-score" class="text-white font-bold">42/1 (2.0 ov)</strong></div>
+                <div class="flex justify-between text-titanium"><span>Target / Opponent:</span><strong id="result-opp-score" class="text-white font-bold">28/3 (2.0 ov)</strong></div>
+                <div class="flex justify-between text-titanium pt-2 border-t border-white/10"><span>Coins Earned:</span><strong id="result-coins" class="text-goldaccent font-bold">+250 Coins</strong></div>
+            </div>
+
+            <div class="flex space-x-3">
+                <button onclick="startMatchSetup(gameMode)" class="flex-1 bg-gradient-to-r from-goldaccent to-yellow-500 text-charcoal py-3 rounded-xl font-heading font-bold text-xs uppercase tracking-wider hover:scale-105 transition-transform shadow">Play Again</button>
+                <button onclick="closeResultModal(); showScreen('menu');" class="flex-1 bg-surfacedark hover:bg-grasslight text-white py-3 rounded-xl font-heading font-bold text-xs uppercase tracking-wider border border-white/10">Main Menu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- App JavaScript Logic -->
+    <script>
+        // ================= GAME DATA & STATE =================
+        const teamsData = [
+            { id: 'warriors', name: 'Green Warriors', color: '#145A27', kit: 'Green Gold', stars: 4, desc: 'Aggressive top-order batters with lethal pacing.' },
+            { id: 'strikers', name: 'Blue Strikers', color: '#1E40AF', kit: 'Royal Blue', stars: 4.5, desc: 'Master spinners and surgical run chasers.' },
+            { id: 'falcons', name: 'Red Falcons', color: '#B91C1C', kit: 'Crimson Flame', stars: 4, desc: 'Hard-hitting power finishers and yorker specialists.' },
+            { id: 'tigers', name: 'Golden Tigers', color: '#D97706', kit: 'Amber Gold', stars: 5, desc: 'The reigning champions of the Gully League.' }
+        ];
+
+        const batsData = [
+            { id: 'willow_std', name: 'Gully Kashmir Willow', price: 0, power: '+0%', imgIcon: 'fa-baseball-bat-ball', unlocked: true },
+            { id: 'willow_pro', name: 'Apex English Willow', price: 500, power: '+15% Power', imgIcon: 'fa-bolt', unlocked: false },
+            { id: 'willow_titan', name: 'Titan Carbon Fiber', price: 1500, power: '+30% Power', imgIcon: 'fa-fire', unlocked: false }
+        ];
+
+        let userState = {
+            coins: 1250,
+            level: 4,
+            activeTeam: 'warriors',
+            oppTeam: 'strikers',
+            equippedBat: 'willow_std',
+            totalRuns: 284,
+            totalSixes: 22,
+            wins: 8
+        };
+
+        // Load saved state from LocalStorage
+        function loadSavedProgress() {
+            const saved = localStorage.getItem('GULLY_LEGENDS_SAVE');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    userState = { ...userState, ...parsed };
+                } catch(e) {}
+            }
+            updateHeaderUI();
+        }
+
+        function saveProgress() {
+            localStorage.setItem('GULLY_LEGENDS_SAVE', JSON.stringify(userState));
+            updateHeaderUI();
+        }
+
+        function updateHeaderUI() {
+            document.getElementById('header-coins').textContent = userState.coins.toLocaleString();
+            document.getElementById('header-level').textContent = `LVL ${userState.level}`;
+            const team = teamsData.find(t => t.id === userState.activeTeam);
+            if (team) {
+                document.getElementById('active-team-name').textContent = team.name;
+            }
+        }
+
+        // ================= WEBAUDIO SYNTHESIZER =================
+        let audioEnabled = true;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            const icon = document.getElementById('sound-icon');
+            if (audioEnabled) {
+                icon.className = 'fa-solid fa-volume-high text-sm';
+            } else {
+                icon.className = 'fa-solid fa-volume-xmark text-sm text-red-400';
+            }
+        }
+
+        function playSound(type) {
+            if (!audioEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'bat') {
+                // Sharp wood crack sound
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(340, now);
+                osc.frequency.exponentialRampToValueAtTime(45, now + 0.08);
+                gain.gain.setValueAtTime(1.0, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.08);
+            } else if (type === 'cheer') {
+                // Crowd roar noise simulation
+                const bufferSize = audioCtx.sampleRate * 0.5;
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(850, now);
+                filter.Q.setValueAtTime(2.5, now);
+
+                const gain = audioCtx.createGain();
+                gain.gain.setValueAtTime(0.35, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+                noise.start(now);
+            } else if (type === 'wicket') {
+                // Wicket crash sound
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(160, now);
+                osc.frequency.exponentialRampToValueAtTime(30, now + 0.22);
+                gain.gain.setValueAtTime(0.85, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.22);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.22);
+            }
+        }
+
+        // Screen Switcher
+        function showScreen(screenId) {
+            document.querySelectorAll('main > section').forEach(sec => sec.classList.add('hidden'));
+            const target = document.getElementById('screen-' + screenId);
+            if (target) target.classList.remove('hidden');
+
+            if (screenId === 'teams') renderTeamsScreen();
+            if (screenId === 'shop') renderShopScreen();
+            if (screenId === 'leaderboard') renderLeaderboardScreen();
+        }
+
+        // ================= TEAMS RENDER =================
+        function renderTeamsScreen() {
+            const container = document.getElementById('teams-container');
+            container.innerHTML = teamsData.map(team => {
+                const isSelected = userState.activeTeam === team.id;
+                return `
+                    <div class="glass-panel p-6 rounded-2xl border ${isSelected ? 'border-goldaccent glow-gold' : 'border-white/10'} space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-full flex items-center justify-center font-heading font-extrabold text-white text-base shadow" style="background-color: ${team.color}">
+                                    ${team.name.charAt(0)}
+                                </div>
+                                <div>
+                                    <h3 class="font-heading font-bold text-lg uppercase">${team.name}</h3>
+                                    <span class="text-xs text-titanium">${team.kit} Squad</span>
+                                </div>
+                            </div>
+                            <span class="text-yellow-400 text-xs font-bold"><i class="fa-solid fa-star mr-1"></i>${team.stars}</span>
+                        </div>
+                        <p class="text-xs text-titanium leading-relaxed">${team.desc}</p>
+                        <button onclick="selectActiveTeam('${team.id}')" class="w-full ${isSelected ? 'bg-goldaccent text-charcoal' : 'bg-surfacedark hover:bg-grasslight text-white border border-white/10'} py-2.5 rounded-xl font-heading font-bold text-xs uppercase tracking-wider transition-all">
+                            ${isSelected ? 'Selected Active Squad' : 'Select Team'}
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function selectActiveTeam(teamId) {
+            userState.activeTeam = teamId;
+            userState.oppTeam = teamsData.find(t => t.id !== teamId).id;
+            saveProgress();
+            renderTeamsScreen();
+        }
+
+        // ================= SHOP RENDER =================
+        function renderShopScreen() {
+            const container = document.getElementById('shop-items-container');
+            container.innerHTML = batsData.map(bat => {
+                const isEquipped = userState.equippedBat === bat.id;
+                return `
+                    <div class="glass-panel p-6 rounded-2xl border ${isEquipped ? 'border-goldaccent glow-gold' : 'border-white/10'} text-center space-y-4 flex flex-col justify-between">
+                        <div>
+                            <div class="w-16 h-16 rounded-2xl bg-grasslight/40 text-goldaccent mx-auto flex items-center justify-center text-3xl mb-3">
+                                <i class="fa-solid ${bat.imgIcon}"></i>
+                            </div>
+                            <h3 class="font-heading font-bold text-base uppercase mb-1">${bat.name}</h3>
+                            <span class="text-xs text-goldaccent font-semibold block mb-2">${bat.power}</span>
+                        </div>
+                        <div>
+                            ${bat.unlocked ? `
+                                <button onclick="equipBat('${bat.id}')" class="w-full ${isEquipped ? 'bg-goldaccent text-charcoal' : 'bg-surfacedark hover:bg-grasslight text-white'} py-2.5 rounded-xl font-heading font-bold text-xs uppercase tracking-wider">
+                                    ${isEquipped ? 'Equipped' : 'Equip Bat'}
+                                </button>
+                            ` : `
+                                <button onclick="buyBat('${bat.id}', ${bat.price})" class="w-full bg-gradient-to-r from-goldaccent to-yellow-500 text-charcoal py-2.5 rounded-xl font-heading font-bold text-xs uppercase tracking-wider shadow">
+                                    Buy for ${bat.price} Coins
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function switchShopTab(tab) {
+            document.querySelectorAll('.shop-tab-btn').forEach(btn => {
+                btn.className = 'shop-tab-btn bg-surfacedark text-titanium px-5 py-2 rounded-lg font-heading font-bold text-xs uppercase';
+            });
+            document.getElementById('tab-' + tab).className = 'shop-tab-btn bg-goldaccent text-charcoal px-5 py-2 rounded-lg font-heading font-bold text-xs uppercase';
+        }
+
+        function equipBat(batId) {
+            userState.equippedBat = batId;
+            saveProgress();
+            renderShopScreen();
+        }
+
+        function buyBat(batId, price) {
+            if (userState.coins >= price) {
+                userState.coins -= price;
+                const bat = batsData.find(b => b.id === batId);
+                if (bat) bat.unlocked = true;
+                userState.equippedBat = batId;
+                saveProgress();
+                renderShopScreen();
+            } else {
+                alert('Not enough coins! Win matches to earn more.');
+            }
+        }
+
+        // ================= LEADERBOARD RENDER =================
+        function renderLeaderboardScreen() {
+            document.getElementById('stats-total-runs').textContent = userState.totalRuns;
+            document.getElementById('stats-total-sixes').textContent = userState.totalSixes;
+            document.getElementById('stats-wins').textContent = userState.wins;
+
+            const achievements = [
+                { title: 'Sixer King', desc: 'Hit 20 total sixes in Gully League', progress: `${Math.min(userState.totalSixes, 20)}/20`, done: userState.totalSixes >= 20 },
+                { title: 'Century Milestone', desc: 'Score 100 total runs across all matches', progress: `${Math.min(userState.totalRuns, 100)}/100`, done: userState.totalRuns >= 100 },
+                { title: 'Gully Dominator', desc: 'Win 5 Quick Matches against AI', progress: `${Math.min(userState.wins, 5)}/5`, done: userState.wins >= 5 }
+            ];
+
+            const container = document.getElementById('achievements-container');
+            container.innerHTML = achievements.map(a => `
+                <div class="bg-surfacedark/80 p-3.5 rounded-xl border border-white/5 flex items-center justify-between text-xs">
+                    <div>
+                        <strong class="text-white font-heading font-bold block text-sm">${a.title}</strong>
+                        <span class="text-titanium">${a.desc}</span>
+                    </div>
+                    <span class="${a.done ? 'text-green-400 font-bold' : 'text-titanium'} font-heading">${a.progress}</span>
+                </div>
+            `).join('');
+        }
+
+        // ================= 3D THREE.JS ENGINE & GAMEPLAY =================
+        let scene, camera, renderer;
+        let gameMode = 'quick';
+        let maxOvers = 2.0;
+        let totalBallsInMatch = 12;
+        let currentBalls = 0;
+        let userRuns = 0;
+        let userWickets = 0;
+        let targetScore = 0;
+        let isPractice = false;
+        let currentShotDir = 'STRAIGHT';
+        let recentBalls = [];
+
+        // 3D Objects State
+        let ball3D, pitch3D, batsman3D, bowler3D;
+        let fielders3D = [];
+        let batsmanBat3D;
+
+        // Physics & Animation Variables
+        let gameState3D = 'IDLE'; // 'IDLE', 'RUNNING_IN', 'DELIVERED', 'HIT', 'FIELDING', 'OUT', 'THROWING'
+        let ballVel = new THREE.Vector3();
+        let ballPos = new THREE.Vector3();
+        let activeFielderIndex = -1;
+        let timingRating = 'READY';
+        let animationFrameId3D = null;
+
+        function startMatchSetup(mode) {
+            gameMode = mode;
+            isPractice = (mode === 'practice');
+            maxOvers = (mode === 'superover') ? 1.0 : 2.0;
+            totalBallsInMatch = maxOvers * 6;
+            currentBalls = 0;
+            userRuns = 0;
+            userWickets = 0;
+            recentBalls = [];
+
+            if (isPractice) {
+                targetScore = 999;
+            } else if (mode === 'superover') {
+                targetScore = Math.floor(Math.random() * 8) + 12;
+            } else {
+                targetScore = Math.floor(Math.random() * 15) + 22;
+            }
+
+            showScreen('game');
+            updateHUDUI();
+            init3DEngine();
+        }
+
+        function startPracticeMode() {
+            startMatchSetup('practice');
+        }
+
+        function setShotDirection(dir) {
+            currentShotDir = dir;
+            const textMap = { 'UP': 'LOFTED HIGH', 'DOWN': 'DEFENSIVE DEFLECT', 'LEFT': 'OFF SIDE DRIVE', 'RIGHT': 'LEG SIDE FLICK' };
+            document.getElementById('hud-shot-feedback').textContent = textMap[dir] || 'READY';
+        }
+
+        function updateHUDUI() {
+            document.getElementById('hud-score').textContent = `${userRuns}/${userWickets}`;
+            const oversPlayed = (Math.floor(currentBalls / 6) + (currentBalls % 6) / 10).toFixed(1);
+            document.getElementById('hud-overs').textContent = `${oversPlayed} / ${maxOvers.toFixed(1)}`;
+            document.getElementById('hud-target').textContent = isPractice ? '∞ Practice' : `${targetScore} Runs`;
+
+            const badgesContainer = document.getElementById('hud-recent-balls');
+            badgesContainer.innerHTML = recentBalls.slice(-6).map(b => {
+                let bgClass = 'bg-surfacedark text-white border-white/10';
+                if (b === '4') bgClass = 'bg-blue-600 text-white font-bold border-blue-400';
+                if (b === '6') bgClass = 'bg-goldaccent text-charcoal font-extrabold border-yellow-300';
+                if (b === 'W') bgClass = 'bg-cricketred text-white font-extrabold border-red-400';
+                return `<span class="w-7 h-7 rounded-full ${bgClass} border flex items-center justify-center text-xs font-heading shadow">${b}</span>`;
+            }).join('');
+        }
+
+        // ================= THREE.JS SCENE BUILDER =================
+        function init3DEngine() {
+            const container = document.getElementById('cricket-canvas');
+            if (!container) return;
+
+            const width = container.parentElement.clientWidth || 800;
+            const height = container.parentElement.clientHeight || 500;
+
+            // Scene setup
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x092813);
+
+            // Camera setup (Behind Batsman Pitch View)
+            camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
+            resetCameraPitchView();
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ canvas: container, antialias: true });
+            renderer.setSize(width, height);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+            scene.add(ambientLight);
+
+            const sunLight = new THREE.DirectionalLight(0xffd700, 1.2);
+            sunLight.position.set(20, 40, 20);
+            sunLight.castShadow = true;
+            scene.add(sunLight);
+
+            // Build Stadium Ground & Pitch
+            buildStadiumGround();
+
+            // Build Characters (Batsman, Bowler, 8 Fielders)
+            buildCharacters();
+
+            // Build Ball
+            buildBall();
+
+            // Key Listeners
+            window.removeEventListener('keydown', handleKeyPress);
+            window.addEventListener('keydown', handleKeyPress);
+
+            // Start Ball Delivery Routine
+            resetBallAndPlayers();
+
+            if (animationFrameId3D) cancelAnimationFrame(animationFrameId3D);
+            animate3D();
+        }
+
+        // Keyboard Input Handler
+        function handleKeyPress(e) {
+            if (document.getElementById('screen-game').classList.contains('hidden')) return;
+
+            if (e.code === 'Space') {
+                e.preventDefault();
+                triggerBatSwing();
+            } else if (e.code === 'ArrowUp') {
+                e.preventDefault();
+                setShotDirection('UP');
+            } else if (e.code === 'ArrowDown') {
+                e.preventDefault();
+                setShotDirection('DOWN');
+            } else if (e.code === 'ArrowLeft') {
+                e.preventDefault();
+                setShotDirection('LEFT');
+            } else if (e.code === 'ArrowRight') {
+                e.preventDefault();
+                setShotDirection('RIGHT');
+            }
+        }
+
+        // Bat Swing & Timing-Based Contact Mechanics
+        function triggerBatSwing() {
+            if (gameState3D !== 'DELIVERED') return;
+
+            // Trigger Bat Animation
+            batsmanBat3D.rotation.x = -Math.PI / 2.5;
+            setTimeout(() => {
+                if (batsmanBat3D) batsmanBat3D.rotation.x = 0;
+            }, 300);
+
+            // Timing Evaluation based on distance from crease
+            const distFromCrease = Math.abs(ballPos.z - 9.8);
+
+            if (distFromCrease < 1.4) {
+                // Perfect / Good timing - Hit ball
+                gameState3D = 'HIT';
+                playSound('bat');
+
+                let shotPower = 0.55;
+                if (userState.equippedBat === 'willow_pro') shotPower = 0.65;
+                if (userState.equippedBat === 'willow_titan') shotPower = 0.75;
+
+                // Direction vectors based on selected shot angle
+                let dirX = 0;
+                let dirY = (currentShotDir === 'UP') ? 0.45 : 0.18;
+                let dirZ = -shotPower;
+
+                if (currentShotDir === 'LEFT') dirX = -0.4;
+                if (currentShotDir === 'RIGHT') dirX = 0.4;
+
+                ballVel.set(dirX, dirY, dirZ);
+
+                // Identify nearest active fielder to chase ball
+                findActiveFielder(ballPos, dirX, dirZ);
+
+                // Evaluate runs scored after ball travel delay
+                setTimeout(evaluateShotOutcome, 2200);
+
+            } else {
+                // Poor timing - Missed ball / Edge
+                timingRating = 'MISSED TIMING!';
+                document.getElementById('hud-shot-feedback').textContent = timingRating;
+            }
+        }
+
+        function findActiveFielder(startPos, dirX, dirZ) {
+            let minDistance = Infinity;
+            activeFielderIndex = -1;
+
+            const estimatedLanding = new THREE.Vector3(startPos.x + dirX * 30, 0, startPos.z + dirZ * 30);
+
+            fielders3D.forEach((f, idx) => {
+                const dist = f.position.distanceTo(estimatedLanding);
+                if (dist < minDistance) {
+                    minDistance = dist;
+                    activeFielderIndex = idx;
+                }
+            });
+
+            if (activeFielderIndex >= 0) {
+                fielders3D[activeFielderIndex].userData.isChasing = true;
+            }
+        }
+
+        function evaluateShotOutcome() {
+            if (gameState3D !== 'HIT' && gameState3D !== 'DELIVERED') return;
+
+            const distanceHit = new THREE.Vector2(ballPos.x, ballPos.z).length();
+            let runsScored = 0;
+
+            if (distanceHit > 50) {
+                runsScored = (ballPos.y > 0.5) ? 6 : 4;
+                playSound('cheer');
+                if (runsScored === 6) userState.totalSixes++;
+            } else if (distanceHit > 30) {
+                runsScored = 3;
+            } else if (distanceHit > 15) {
+                runsScored = 2;
+            } else {
+                runsScored = 1;
+            }
+
+            userRuns += runsScored;
+            userState.totalRuns += runsScored;
+            recentBalls.push(runsScored.toString());
+
+            currentBalls++;
+            updateHUDUI();
+            saveProgress();
+
+            if (currentBalls >= totalBallsInMatch || (!isPractice && userRuns >= targetScore)) {
+                setTimeout(showMatchResults, 1200);
+            } else {
+                setTimeout(resetBallAndPlayers, 1800);
+            }
+        }
+
+        function endBallSequence() {
+            currentBalls++;
+            updateHUDUI();
+            saveProgress();
+
+            if (currentBalls >= totalBallsInMatch || userWickets >= 10) {
+                setTimeout(showMatchResults, 1200);
+            } else {
+                setTimeout(resetBallAndPlayers, 1800);
+            }
+        }
+
+        function showMatchResults() {
+            const modal = document.getElementById('modal-result');
+            const title = document.getElementById('result-title');
+            const subtitle = document.getElementById('result-subtitle');
+            const userScoreEl = document.getElementById('result-user-score');
+            const oppScoreEl = document.getElementById('result-opp-score');
+            const coinsEl = document.getElementById('result-coins');
+
+            const oversStr = (Math.floor(currentBalls / 6) + (currentBalls % 6) / 10).toFixed(1);
+            userScoreEl.textContent = `${userRuns}/${userWickets} (${oversStr} ov)`;
+            oppScoreEl.textContent = isPractice ? 'N/A Practice' : `${targetScore - 1} Target`;
+
+            if (isPractice) {
+                title.textContent = 'PRACTICE COMPLETE';
+                subtitle.textContent = `Scored ${userRuns} runs in practice net.`;
+                coinsEl.textContent = '+50 Coins';
+                userState.coins += 50;
+            } else if (userRuns >= targetScore) {
+                title.textContent = 'VICTORY!';
+                subtitle.textContent = `You chased down the target in ${oversStr} overs!`;
+                coinsEl.textContent = '+250 Coins';
+                userState.coins += 250;
+                userState.wins++;
+            } else {
+                title.textContent = 'MATCH LOST';
+                subtitle.textContent = `Fell short of the target score by ${targetScore - userRuns} runs.`;
+                coinsEl.textContent = '+50 Coins';
+                userState.coins += 50;
+            }
+
+            saveProgress();
+            modal.classList.remove('hidden');
+        }
+
+        function closeResultModal() {
+            document.getElementById('modal-result').classList.add('hidden');
+        }
+
+        function resetCameraPitchView() {
+            camera.position.set(0, 4.5, 18);
+            camera.lookAt(0, 1.2, -5);
+        }
+
+        function buildStadiumGround() {
+            // Grass Field
+            const grassGeo = new THREE.CylinderGeometry(55, 55, 0.2, 64);
+            const grassMat = new THREE.MeshStandardMaterial({ color: 0x0b3d1b, roughness: 0.8 });
+            const grass = new THREE.Mesh(grassGeo, grassMat);
+            grass.position.y = -0.1;
+            scene.add(grass);
+
+            // White Boundary Oval Line
+            const boundGeo = new THREE.RingGeometry(51, 51.5, 64);
+            const boundMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
+            const boundRing = new THREE.Mesh(boundGeo, boundMat);
+            boundRing.rotation.x = Math.PI / 2;
+            boundRing.position.y = 0.02;
+            scene.add(boundRing);
+
+            // Dirt Pitch
+            const pitchGeo = new THREE.BoxGeometry(3.2, 0.05, 22);
+            const pitchMat = new THREE.MeshStandardMaterial({ color: 0xc2b280, roughness: 0.9 });
+            pitch3D = new THREE.Mesh(pitchGeo, pitchMat);
+            pitch3D.position.set(0, 0.01, 0);
+            scene.add(pitch3D);
+
+            // Stumps (Both ends)
+            createStumpsGroup(0, 10.5);  // Batsman Wickets
+            createStumpsGroup(0, -10.5); // Bowler Wickets
+        }
+
+        function createStumpsGroup(x, z) {
+            const group = new THREE.Group();
+            const stumpMat = new THREE.MeshStandardMaterial({ color: 0xffc72c });
+            for (let i = -0.25; i <= 0.25; i += 0.25) {
+                const stump = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.9, 16), stumpMat);
+                stump.position.set(i, 0.45, 0);
+                group.add(stump);
+            }
+            // Bail
+            const bail = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.6, 16), stumpMat);
+            bail.rotation.z = Math.PI / 2;
+            bail.position.set(0, 0.92, 0);
+            group.add(bail);
+
+            group.position.set(x, 0, z);
+            scene.add(group);
+        }
+
+        // High-Quality Procedural 3D Cartoon Character Creator
+        function createCartoonCharacter(jerseyColor, hasCap = true, isBatsman = false) {
+            const group = new THREE.Group();
+            
+            // Materials
+            const skinMat = new THREE.MeshStandardMaterial({ color: 0xffcd94, roughness: 0.4 });
+            const jerseyMat = new THREE.MeshStandardMaterial({ color: jerseyColor, roughness: 0.5 });
+            const pantsMat = new THREE.MeshStandardMaterial({ color: 0x121915, roughness: 0.6 });
+            const whiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
+            const capMat = new THREE.MeshStandardMaterial({ color: jerseyColor, roughness: 0.4 });
+            const eyeMat = new THREE.MeshBasicMaterial({ color: 0x090909 });
+
+            // 1. HEAD & EXPRESSION
+            const headGroup = new THREE.Group();
+            headGroup.position.y = 1.95;
+            
+            // Rounded Stylized Head
+            const headGeo = new THREE.SphereGeometry(0.38, 24, 24);
+            headGeo.scale(1, 1.1, 1);
+            const head = new THREE.Mesh(headGeo, skinMat);
+            headGroup.add(head);
+
+            // Cartoon Eyes
+            const eyeGeo = new THREE.SphereGeometry(0.06, 12, 12);
+            const eyeL = new THREE.Mesh(eyeGeo, whiteMat);
+            eyeL.position.set(-0.13, 0.05, 0.32);
+            const pupilL = new THREE.Mesh(new THREE.SphereGeometry(0.03, 10, 10), eyeMat);
+            pupilL.position.set(-0.13, 0.05, 0.37);
+            
+            const eyeR = new THREE.Mesh(eyeGeo, whiteMat);
+            eyeR.position.set(0.13, 0.05, 0.32);
+            const pupilR = new THREE.Mesh(new THREE.SphereGeometry(0.03, 10, 10), eyeMat);
+            pupilR.position.set(0.13, 0.05, 0.37);
+
+            headGroup.add(eyeL, pupilL, eyeR, pupilR);
+
+            // Nose & Ears
+            const nose = new THREE.Mesh(new THREE.SphereGeometry(0.05, 12, 12), skinMat);
+            nose.position.set(0, -0.02, 0.38);
+            headGroup.add(nose);
+
+            const earGeo = new THREE.SphereGeometry(0.08, 12, 12);
+            const earL = new THREE.Mesh(earGeo, skinMat);
+            earL.position.set(-0.36, 0, 0);
+            const earR = new THREE.Mesh(earGeo, skinMat);
+            earR.position.set(0.36, 0, 0);
+            headGroup.add(earL, earR);
+
+            // Cap / Helmet
+            if (hasCap) {
+                const capDome = new THREE.Mesh(new THREE.SphereGeometry(0.40, 20, 20, 0, Math.PI * 2, 0, Math.PI / 2), capMat);
+                capDome.position.y = 0.04;
+                const capVisor = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.03, 0.28), capMat);
+                capVisor.position.set(0, 0.02, 0.42);
+                capVisor.rotation.x = 0.15;
+                headGroup.add(capDome, capVisor);
+            }
+
+            group.add(headGroup);
+
+            // 2. TORSO & UPPER BODY
+            const torsoGroup = new THREE.Group();
+            torsoGroup.position.y = 1.35;
+
+            // Curved Cartoon Chest
+            const chestGeo = new THREE.CylinderGeometry(0.34, 0.26, 0.75, 16);
+            const chest = new THREE.Mesh(chestGeo, jerseyMat);
+            torsoGroup.add(chest);
+
+            // Collar / Trim
+            const collar = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.03, 12, 24), whiteMat);
+            collar.rotation.x = Math.PI / 2;
+            collar.position.y = 0.38;
+            torsoGroup.add(collar);
+
+            group.add(torsoGroup);
+
+            // 3. ARMS WITH JOINTS
+            const armLGroup = new THREE.Group();
+            armLGroup.position.set(-0.38, 1.62, 0);
+            const armUpperL = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.08, 0.45, 12), jerseyMat);
+            armUpperL.position.y = -0.2;
+            const armLowerL = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.07, 0.45, 12), skinMat);
+            armLowerL.position.y = -0.6;
+            const handL = new THREE.Mesh(new THREE.SphereGeometry(0.09, 12, 12), isBatsman ? whiteMat : skinMat);
+            handL.position.y = -0.85;
+            armLGroup.add(armUpperL, armLowerL, handL);
+            group.add(armLGroup);
+
+            const armRGroup = new THREE.Group();
+            armRGroup.position.set(0.38, 1.62, 0);
+            const armUpperR = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.08, 0.45, 12), jerseyMat);
+            armUpperR.position.y = -0.2;
+            const armLowerR = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.07, 0.45, 12), skinMat);
+            armLowerR.position.y = -0.6;
+            const handR = new THREE.Mesh(new THREE.SphereGeometry(0.09, 12, 12), isBatsman ? whiteMat : skinMat);
+            handR.position.y = -0.85;
+            armRGroup.add(armUpperR, armLowerR, handR);
+            group.add(armRGroup);
+
+            // 4. LEGS & PADS / SHOES
+            const legLGroup = new THREE.Group();
+            legLGroup.position.set(-0.18, 0.95, 0);
+            const legUpperL = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.11, 0.5, 12), pantsMat);
+            legUpperL.position.y = -0.25;
+            const legLowerL = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.09, 0.5, 12), isBatsman ? whiteMat : pantsMat);
+            legLowerL.position.y = -0.7;
+            const shoeL = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.12, 0.32), whiteMat);
+            shoeL.position.set(0, -0.92, 0.06);
+            legLGroup.add(legUpperL, legLowerL, shoeL);
+            group.add(legLGroup);
+
+            const legRGroup = new THREE.Group();
+            legRGroup.position.set(0.18, 0.95, 0);
+            const legUpperR = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.11, 0.5, 12), pantsMat);
+            legUpperR.position.y = -0.25;
+            const legLowerR = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.09, 0.5, 12), isBatsman ? whiteMat : pantsMat);
+            legLowerR.position.y = -0.7;
+            const shoeR = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.12, 0.32), whiteMat);
+            shoeR.position.set(0, -0.92, 0.06);
+            legRGroup.add(legUpperR, legLowerR, shoeR);
+            group.add(legRGroup);
+
+            // Store bone/mesh references for dynamic procedural animation
+            group.userData = {
+                headGroup,
+                armLGroup,
+                armRGroup,
+                legLGroup,
+                legRGroup,
+                animTimer: 0
+            };
+
+            return group;
+        }
+
+        function buildCharacters() {
+            // Batsman - Styled 3D Cartoon Model
+            batsman3D = createCartoonCharacter(0xffc72c, true, true); // Gold Jersey & Batting Pads
+            batsman3D.position.set(0, 0, 9.8);
+            batsman3D.rotation.y = 0; // Facing bowler straight down the pitch
+
+            // Detailed Cricket Bat
+            const batGroup = new THREE.Group();
+            const bladeMat = new THREE.MeshStandardMaterial({ color: 0xd2b48c, roughness: 0.3 });
+            const handleMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
+            
+            const blade = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.85, 0.05), bladeMat);
+            blade.position.y = -0.4;
+            const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.4, 12), handleMat);
+            handle.position.y = 0.15;
+            batGroup.add(blade, handle);
+
+            batsmanBat3D = batGroup;
+            batsmanBat3D.position.set(0.35, 0.75, 0.2);
+            batsman3D.add(batsmanBat3D);
+            scene.add(batsman3D);
+
+            // Bowler
+            bowler3D = createCartoonCharacter(0x1e40af, true, false); // Blue Jersey
+            bowler3D.position.set(0, 0, -14);
+            scene.add(bowler3D);
+
+            // 8 Active Fielders spread around outfield
+            fielders3D = [];
+            const fielderPositions = [
+                { x: -18, z: 5 },   // Cover
+                { x: 18, z: 5 },    // Mid-wicket
+                { x: -28, z: -15 }, // Deep Point
+                { x: 28, z: -15 },  // Deep Square Leg
+                { x: 0, z: -42 },   // Long Off
+                { x: -15, z: 25 },  // Slip
+                { x: 15, z: 25 },   // Fine Leg
+                { x: -35, z: 10 }   // Deep Cover
+            ];
+
+            fielderPositions.forEach(pos => {
+                const f = createCartoonCharacter(0xb91c1c, true, false); // Red Fielding Jersey
+                f.position.set(pos.x, 0, pos.z);
+                f.userData = { ...f.userData, homeX: pos.x, homeZ: pos.z, isChasing: false };
+                scene.add(f);
+                fielders3D.push(f);
+            });
+        }
+
+        function buildBall() {
+            const ballGeo = new THREE.SphereGeometry(0.12, 16, 16);
+            const ballMat = new THREE.MeshStandardMaterial({ color: 0xd93838, roughness: 0.3 });
+            ball3D = new THREE.Mesh(ballGeo, ballMat);
+            scene.add(ball3D);
+        }
+
+        function resetBallAndPlayers() {
+            gameState3D = 'IDLE';
+            ballPos.set(0, 1.2, -10.5);
+            ball3D.position.copy(ballPos);
+
+            bowler3D.position.set(0, 0, -15);
+            batsman3D.position.set(0, 0, 9.8);
+            batsman3D.rotation.y = 0;
+            batsmanBat3D.rotation.set(0, 0, 0);
+
+            // Reset Batsman Head Tracking directly towards Bowler
+            if (batsman3D.userData.headGroup) {
+                batsman3D.userData.headGroup.lookAt(bowler3D.position.x, bowler3D.position.y + 1.8, bowler3D.position.z);
+            }
+
+            resetCameraPitchView();
+
+            // Reset fielders
+            fielders3D.forEach(f => {
+                f.position.set(f.userData.homeX, 0, f.userData.homeZ);
+                f.userData.isChasing = false;
+            });
+
+            setTimeout(() => {
+                if (gameState3D === 'IDLE') {
+                    gameState3D = 'RUNNING_IN';
+                }
+            }, 1000);
+        }
+<!-- ... existing code -->
+        // 3D Animation Render Loop
+        function animate3D() {
+            animationFrameId3D = requestAnimationFrame(animate3D);
+
+            // Dynamic Batsman Head-Tracking towards Bowler / Moving Ball
+            if (batsman3D && batsman3D.userData.headGroup) {
+                if (gameState3D === 'RUNNING_IN' || gameState3D === 'IDLE') {
+                    const targetHeadPos = new THREE.Vector3(bowler3D.position.x, 1.8, bowler3D.position.z);
+                    batsman3D.userData.headGroup.lookAt(targetHeadPos);
+                } else if (gameState3D === 'DELIVERED' || gameState3D === 'HIT') {
+                    const ballHeadPos = new THREE.Vector3(ballPos.x, ballPos.y, ballPos.z);
+                    batsman3D.userData.headGroup.lookAt(ballHeadPos);
+                }
+            }
+
+            // State Mechanics & Dynamic Character Bone Animations
+            if (gameState3D === 'RUNNING_IN') {
+                bowler3D.position.z += 0.2;
+                
+                // Procedural Bowler Run-up Animation
+                bowler3D.userData.animTimer += 0.25;
+                const t = bowler3D.userData.animTimer;
+                bowler3D.userData.legLGroup.rotation.x = Math.sin(t) * 0.7;
+                bowler3D.userData.legRGroup.rotation.x = -Math.sin(t) * 0.7;
+                bowler3D.userData.armLGroup.rotation.x = -Math.sin(t) * 0.8;
+                bowler3D.userData.armRGroup.rotation.x = Math.sin(t) * 0.8;
+
+                if (bowler3D.position.z >= -10.5) {
+                    gameState3D = 'DELIVERED';
+                    // Bowler delivery arm wind-up
+                    bowler3D.userData.armRGroup.rotation.x = -Math.PI;
+                    ballVel.set((Math.random() - 0.5) * 0.05, -0.05, 0.45);
+                }
+            } else if (gameState3D === 'DELIVERED') {
+                ballPos.add(ballVel);
+                ball3D.position.copy(ballPos);
+
+                // Idle Batsman Stance Breathing
+                batsman3D.userData.animTimer += 0.05;
+                batsman3D.position.y = Math.sin(batsman3D.userData.animTimer) * 0.03;
+
+                // Bowled Wicket Check
+                if (ballPos.z >= 9.8 && Math.abs(ballPos.x) < 0.4 && ballPos.y < 0.9) {
+                    gameState3D = 'OUT';
+                    timingRating = 'BOWLED OUT!';
+                    playSound('wicket');
+                    userWickets++;
+                    recentBalls.push('W');
+                    endBallSequence();
+                }
+            } else if (gameState3D === 'HIT') {
+                // Ball Movement & Gravity Physics
+                ballPos.add(ballVel);
+                ballVel.y -= 0.015; // Gravity
+                if (ballPos.y <= 0.12) {
+                    ballPos.y = 0.12;
+                    ballVel.y *= -0.5; // Bounce friction
+                    ballVel.x *= 0.92;
+                    ballVel.z *= 0.92;
+                }
+                ball3D.position.copy(ballPos);
+
+                // Camera follow ball
+                camera.lookAt(ballPos);
+
+                // Fielder Chase & Running Limb Animations
+                if (activeFielderIndex >= 0) {
+                    const fielder = fielders3D[activeFielderIndex];
+                    const targetDir = new THREE.Vector3().subVectors(ballPos, fielder.position);
+                    targetDir.y = 0;
+
+                    if (targetDir.length() > 0.8) {
+                        targetDir.normalize().multiplyScalar(0.25);
+                        fielder.position.add(targetDir);
+                        
+                        // Fielder running animation
+                        fielder.userData.animTimer += 0.3;
+                        const ft = fielder.userData.animTimer;
+                        fielder.userData.legLGroup.rotation.x = Math.sin(ft) * 0.8;
+                        fielder.userData.legRGroup.rotation.x = -Math.sin(ft) * 0.8;
+                        fielder.userData.armLGroup.rotation.x = -Math.sin(ft) * 0.8;
+                        fielder.userData.armRGroup.rotation.x = Math.sin(ft) * 0.8;
+                        fielder.lookAt(ballPos.x, 0, ballPos.z);
+                    } else {
+                        // Picking/Bending animation
+                        fielder.userData.armLGroup.rotation.x = 0.5;
+                        fielder.userData.armRGroup.rotation.x = 0.5;
+                    }
+                }
+            }
+
+            renderer.render(scene, camera);
+        }
+<!-- ... existing code -->
